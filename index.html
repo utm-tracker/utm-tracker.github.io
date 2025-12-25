@@ -67,6 +67,11 @@ function getTrackingCookie() {
 // Handle URL actions
 const urlParams = new URLSearchParams(window.location.search);
 const action = urlParams.get('action');
+const site = urlParams.get('site');
+
+if(!site || !action) {
+    return;
+}
 
 if (action === 'set') {
     setTrackingCookie();
@@ -74,7 +79,7 @@ if (action === 'set') {
     const data = getTrackingCookie();
     if (window !== window.top) {
         window.parent.postMessage({
-            type: 'UTM_COOKIE_DATA',
+            type: 'UTM_DATA',
             data: data
         }, '*');
     }
