@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="robots" content="noindex, nofollow">
+</head>
+<body>
+<script>
+const COOKIE_NAME = 'utm_tracking';
+const EXPIRY_DAYS = 360;
+
+function getUTMParamsFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        source: params.get('utm_source'),
+        medium: params.get('utm_medium'),
+        campaign: params.get('utm_campaign'),
+        term: params.get('utm_term'),
+        content: params.get('utm_content'),
+        domain: params.get('domain') || document.referrer
+    };
+}
+
+function setTrackingCookie() {
+    const utmParams = getUTMParamsFromUrl();
+    const trackingData = {
+        ...utmParams,
+        timestamp: Date.now(),
+        expiry: Date.now() + (EXPIRY_DAYS * 24 * 60 * 60 * 1000)
+    };
+    
+    // Set cookie
+    document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(trackingData))}; max-age=${EXPIRY_DAYS * 24 * 60 * 60}; path=/; samesite=none; secure`;
+    
+    // Also store in localStorage as backup
+    localStorage.setItem(COOKIE_NAME, JSON.stringify(trackingData));
+    
+    // Send confirmation to parent
+    if (window !== window.top) {
+        window.parent.postMessage({
+            type: 'UTM_COOKIE_SET',
+            data: trackingData
+        }, '*');
+    }
+}
+
+function getTrackingCookie() {
+    // Read cookie
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === COOKIE_NAME && value) {
+            try {
+                const data = JSON.parse(decodeURIComponent(value));
+                // Check expiry
+                if (data.expiry && data.expiry > Date.now()) {
+                    return data;
+                }
+            } catch (e) {
+                console.error('Error parsing cookie:', e);
+            }
+        }
+    }
+    return null;
+}
+
+// Handle URL actions
+const urlParams = new URLSearchParams(window.location.search);
+const action = urlParams.get('action');
+
+if (action === 'set') {
+    setTrackingCookie();
+} else if (action === 'get') {
+    const data = getTrackingCookie();
+    if (window !== window.top) {
+        window.parent.postMessage({
+            type: 'UTM_COOKIE_DATA',
+            data: data
+        }, '*');
+    }
+}
+
+// Listen for requests
+window.addEventListener('message', (event) => {
+    if (event.data.type === 'GET_UTM_DATA') {
+        const data = getTrackingCookie();
+        event.source.postMessage({
+            type: 'UTM_DATA_RESPONSE',
+            data: data
+        }, event.origin);
+    }
+});
+</script>
+</body>
+</html>
