@@ -66,20 +66,20 @@ function getTrackingCookie() {
 const urlParams = new URLSearchParams(window.location.search);
 const action = urlParams.get('action');
 const site = urlParams.get('site');
-let COOKIE_NAME = 'utm_tracking_' + site;
+const COOKIE_NAME = 'utm_tracking_' + site;
 
 if(site && action) {
-if (action === 'set') {
-    setTrackingCookie();
-} else if (action === 'get') {
-    const data = getTrackingCookie();
-    if (window !== window.top) {
-        window.parent.postMessage({
-            type: 'UTM_DATA',
-            data: data
-        }, '*');
+    if (action === 'set') {
+        setTrackingCookie();
+    } else if (action === 'get') {
+        const data = getTrackingCookie();
+        if (window !== window.top) {
+            window.parent.postMessage({
+                type: 'UTM_DATA',
+                data: data
+            }, '*');
+        }
     }
-}
 }
 
 // Listen for requests
