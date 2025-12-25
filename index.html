@@ -72,26 +72,17 @@ if(site && action) {
     if (action === 'set') {
         setTrackingCookie();
     } else if (action === 'get') {
+setTimeout(() => {
         const data = getTrackingCookie();
         if (window !== window.top) {
             window.parent.postMessage({
                 type: 'UTM_DATA',
-                data: getTrackingCookie()
+                data: data
             }, '*');
         }
+}, 1000);
     }
 }
-
-// Listen for requests
-window.addEventListener('message', (event) => {
-    if (event.data.type === 'GET_UTM_DATA') {
-        const data = getTrackingCookie();
-        event.source.postMessage({
-            type: 'UTM_DATA_RESPONSE',
-            data: data
-        }, event.origin);
-    }
-});
 </script>
 </body>
 </html>
