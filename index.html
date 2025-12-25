@@ -68,10 +68,7 @@ const action = urlParams.get('action');
 const site = urlParams.get('site');
 let COOKIE_NAME = 'utm_tracking_' + site;
 
-if(!site || !action) {
-    return;
-}
-
+if(site && action) {
 if (action === 'set') {
     setTrackingCookie();
 } else if (action === 'get') {
@@ -82,6 +79,7 @@ if (action === 'set') {
             data: data
         }, '*');
     }
+}
 }
 
 // Listen for requests
