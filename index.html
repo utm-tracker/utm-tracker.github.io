@@ -76,7 +76,7 @@ if(site && action) {
         if (window !== window.top) {
             window.parent.postMessage({
                 type: 'UTM_DATA',
-                data: data
+                data: getTrackingCookie()
             }, '*');
         }
     }
