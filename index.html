@@ -6,9 +6,6 @@
 </head>
 <body>
 <script>
-const COOKIE_NAME = 'utm_tracking';
-const EXPIRY_DAYS = 360;
-
 function getUTMParamsFromUrl() {
     const params = new URLSearchParams(window.location.search);
     return {
@@ -26,14 +23,15 @@ function setTrackingCookie() {
     const trackingData = {
         ...utmParams,
         timestamp: Date.now(),
-        expiry: Date.now() + (EXPIRY_DAYS * 24 * 60 * 60 * 1000)
+        expiry: Date.now() + (365 * 24 * 60 * 60 * 1000)
     };
     
+    const d = new Date();
+    d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
+    let expires = "expires="+ d.toUTCString();
+
     // Set cookie
-    document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(trackingData))}; max-age=${EXPIRY_DAYS * 24 * 60 * 60}; path=/; samesite=none; secure`;
-    
-    // Also store in localStorage as backup
-    localStorage.setItem(COOKIE_NAME, JSON.stringify(trackingData));
+    document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(trackingData))}; ${expires}; path=/`;
     
     // Send confirmation to parent
     if (window !== window.top) {
@@ -68,6 +66,7 @@ function getTrackingCookie() {
 const urlParams = new URLSearchParams(window.location.search);
 const action = urlParams.get('action');
 const site = urlParams.get('site');
+let COOKIE_NAME = 'utm_tracking_' + site;
 
 if(!site || !action) {
     return;
