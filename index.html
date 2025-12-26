@@ -88,7 +88,7 @@ setTimeout(() => {
 if (window !== window.top) {
             window.parent.postMessage({
                 type: 'UTM_LOCAL',
-                data: localStorage.getItem(COOKIE_NAME)
+                data: JSON.parse(localStorage.getItem(COOKIE_NAME))
             }, '*');
         }
 
