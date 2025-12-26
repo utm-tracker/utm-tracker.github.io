@@ -18,7 +18,7 @@ function getUTMParamsFromUrl() {
     };
 }
 
-function setTrackingCookie() {
+function setTrackingData() {
     const utmParams = getUTMParamsFromUrl();
     const trackingData = {
         ...utmParams,
@@ -26,42 +26,17 @@ function setTrackingCookie() {
         expiry: Date.now() + (365 * 24 * 60 * 60 * 1000)
     };
     
-    const d = new Date();
-    d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
-    let expires = "expires="+ d.toUTCString();
-
-    // Set cookie
-    document.cookie = `${COOKIE_NAME}=${JSON.stringify(trackingData)}; ${expires}; path=/`;
-    
-    // Store in localStorage as backup
-    localStorage.setItem(COOKIE_NAME, JSON.stringify(trackingData));
-
-    // Send confirmation to parent
-    if (window !== window.top) {
-        window.parent.postMessage({
-            type: 'UTM_COOKIE_SET',
-            data: trackingData
-        }, '*');
-    }
+    localStorage.setItem(storageKey, JSON.stringify(trackingData));
 }
 
-function getTrackingCookie() {
-    // Read cookie
-    const cookies = document.cookie.split(';');
-    for (let cookie of cookies) {
-        const [name, value] = cookie.trim().split('=');
-        if (name === COOKIE_NAME && value) {
-            try {
-                const data = JSON.parse(value);
-                // Check expiry
-                if (data.expiry && data.expiry > Date.now()) {
-                    return data;
-                }
-            } catch (e) {
-                console.error('Error parsing cookie:', e);
-            }
-        }
+function getTrackingData() {
+    try {
+        const data = JSON.parse(localStorage.getItem(storageKey));
+        return data;
+    } catch (e) {
+        console.error('Error parsing cookie:', e);
     }
+
     return null;
 }
 
@@ -69,29 +44,18 @@ function getTrackingCookie() {
 const urlParams = new URLSearchParams(window.location.search);
 const action = urlParams.get('action');
 const site = urlParams.get('site');
-const COOKIE_NAME = 'utm_tracking_' + site;
+const storageKey = 'utm_tracking_' + site;
 
 if(site && action) {
     if (action === 'set') {
-        setTrackingCookie();
+        setTrackingData();
     } else if (action === 'get') {
-setTimeout(() => {
-        const data = getTrackingCookie();
         if (window !== window.top) {
             window.parent.postMessage({
                 type: 'UTM_DATA',
-                data: data
+                data: getTrackingData()
             }, '*');
         }
-}, 1000);
-
-if (window !== window.top) {
-            window.parent.postMessage({
-                type: 'UTM_LOCAL',
-                data: JSON.parse(localStorage.getItem(COOKIE_NAME))
-            }, '*');
-        }
-
     }
 }
 </script>
