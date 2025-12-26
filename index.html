@@ -31,8 +31,11 @@ function setTrackingCookie() {
     let expires = "expires="+ d.toUTCString();
 
     // Set cookie
-    document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(trackingData))}; ${expires}; path=/`;
+    document.cookie = `${COOKIE_NAME}=${JSON.stringify(trackingData)}; ${expires}; path=/`;
     
+    // Store in localStorage as backup
+    localStorage.setItem(COOKIE_NAME, JSON.stringify(trackingData));
+
     // Send confirmation to parent
     if (window !== window.top) {
         window.parent.postMessage({
@@ -49,7 +52,7 @@ function getTrackingCookie() {
         const [name, value] = cookie.trim().split('=');
         if (name === COOKIE_NAME && value) {
             try {
-                const data = JSON.parse(decodeURIComponent(value));
+                const data = JSON.parse(value);
                 // Check expiry
                 if (data.expiry && data.expiry > Date.now()) {
                     return data;
